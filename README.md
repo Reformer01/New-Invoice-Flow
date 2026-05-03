@@ -1,20 +1,20 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+Business Application
+InvoiceFlow - Professional Invoice Generator
 
-# Run and deploy your AI Studio app
+InvoiceFlow - Professional Invoice Generator screenshot 1
+Thumbnail 1
+Thumbnail 2
+Thumbnail 3
+Thumbnail 4
+Thumbnail 5
+1 / 5
+About
+A professional invoicing platform that helps businesses create, manage, and send invoices effortlessly. Choose from multiple polished templates, automatically calculate totals in any currency with real-time exchange rates, and send invoices directly to clients via email. Features a beautiful frosted glass interface with both light and dark modes. Perfect for freelancers and small businesses who need to look professional while managing their billing. All data is securely stored and accessible from anywhere.
 
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/01d011af-9c3c-49e6-b2e9-f9c42bc6e806
-
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Key Features
+Multiple customizable invoice templates
+Multi-currency support with real-time exchange rates
+Direct email invoice sending to clients
+Modern frosted glass UI design
+Light/dark theme support
+Responsive design for desktop and mobile
