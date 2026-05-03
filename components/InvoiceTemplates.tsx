@@ -18,7 +18,7 @@ type TemplateProps = {
     clientEmail: string;
     currency: string;
     notes: string;
-    bankInfo: string;
+    bankDetails?: string;
     items: InvoiceItem[];
   };
   logo: string | null;
@@ -44,7 +44,7 @@ export const TemplateClassic: React.FC<TemplateProps> = ({ invoice, logo, finalT
         <div className="flex flex-col items-center mb-16 text-center">
           {logo && <img src={logo} alt="Company Logo" className="h-16 w-auto object-contain mb-6" />}
           <div className="h-[2px] w-16 bg-[var(--accent)] mb-6"></div>
-          <h2 className="text-6xl md:text-7xl font-serif font-black tracking-tight m-0 leading-none">
+          <h2 className="text-7xl font-serif font-black tracking-tight m-0 leading-none">
             INVOICE
           </h2>
           <div className="mt-4 font-sans text-xs tracking-[0.3em] uppercase opacity-70">
@@ -127,7 +127,7 @@ export const TemplateClassic: React.FC<TemplateProps> = ({ invoice, logo, finalT
 
         {/* TOTALS */}
         <div className="flex justify-end border-t border-[var(--border)] pt-8 mb-16">
-          <div className="w-full md:w-1/2">
+          <div className="w-1/2">
             <div className="flex justify-between py-2 border-b border-[var(--border)] opacity-80">
               <span className="text-xs uppercase tracking-widest font-bold">Subtotal</span>
               <span className="font-bold">{(finalTotal).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
@@ -141,23 +141,19 @@ export const TemplateClassic: React.FC<TemplateProps> = ({ invoice, logo, finalT
           </div>
         </div>
 
-        {/* BANK INFORMATION */}
-        {invoice.bankInfo && (
-          <div className="mb-12 p-4 border border-[var(--border)] bg-[var(--bg-secondary)] opacity-90">
-            <p className="font-sans text-xs uppercase tracking-widest text-[var(--accent)] font-bold mb-2">Bank Details</p>
-            <p className="font-sans text-xs whitespace-pre-wrap opacity-80">
-              {invoice.bankInfo}
-            </p>
-          </div>
-        )}
-
         {/* FOOTER / REMARKS */}
         <div className="text-center opacity-70 flex flex-col items-center">
           <div className="h-[2px] w-16 bg-[var(--border)] mb-4"></div>
           <p className="font-sans text-xs uppercase tracking-widest font-bold mb-2">Remarks</p>
-          <p className="font-serif text-sm italic max-w-sm mx-auto">
+          <p className="font-serif text-sm italic max-w-sm mx-auto mb-4">
             {invoice.notes}
           </p>
+          {invoice.bankDetails && (
+            <>
+              <p className="font-sans text-[10px] uppercase tracking-widest font-bold mb-2">Payment Details</p>
+              <p className="font-sans text-xs whitespace-pre-wrap max-w-sm mx-auto">{invoice.bankDetails}</p>
+            </>
+          )}
         </div>
 
       </div>
@@ -175,7 +171,7 @@ export const TemplateBold: React.FC<TemplateProps> = ({ invoice, logo, finalTota
         {/* HEADER */}
         <div className="grid grid-cols-2 gap-8 items-end border-b-4 border-[var(--tx-primary)] pb-8">
           <div>
-            {logo ? <img src={logo} alt="Company Logo" className="h-20 w-auto object-contain mb-4" /> : <div className="h-20 w-20 bg-[var(--accent)] mb-4 flex items-center justify-center text-[var(--bg-primary)] font-bold text-xs">LOGO</div>}
+            {logo ? <img src={logo} alt="Company Logo" className="h-20 w-auto object-contain mb-4" /> : <div className="h-20 w-20 bg-[var(--accent)] mb-4 flex items-center justify-center text-[var(--bg-primary)] font-bold text-4xl">L</div>}
             <div className="font-sans text-xs tracking-widest uppercase font-bold text-[var(--accent)]">Invoice No.</div>
             <div className="font-sans text-3xl font-black mt-1 uppercase">{invoice.id}</div>
           </div>
@@ -251,19 +247,17 @@ export const TemplateBold: React.FC<TemplateProps> = ({ invoice, logo, finalTota
           </div>
         </div>
 
-        {/* BANK INFORMATION */}
-        {invoice.bankInfo && (
-          <div className="border-l-4 border-[var(--accent)] pl-4 py-2">
-            <p className="font-bold text-[10px] tracking-widest uppercase text-[var(--accent)] mb-2">Bank Information</p>
-            <p className="font-sans text-xs whitespace-pre-wrap opacity-80">{invoice.bankInfo}</p>
-          </div>
-        )}
-
         {/* FOOTER */}
         {invoice.notes && (
           <div className="border border-[var(--tx-primary)] p-6 bg-[var(--bg-primary)] relative">
             <div className="absolute -top-3 left-4 bg-[var(--bg-primary)] px-2 font-bold text-[10px] tracking-widest uppercase">Remarks</div>
             <p className="font-mono text-sm leading-relaxed opacity-80 uppercase">{invoice.notes}</p>
+          </div>
+        )}
+        {invoice.bankDetails && (
+          <div className="border-l-4 border-[var(--tx-primary)] pl-4">
+            <p className="font-bold text-[10px] tracking-widest uppercase mb-1">Bank Details</p>
+            <p className="font-mono text-xs whitespace-pre-wrap">{invoice.bankDetails}</p>
           </div>
         )}
       </div>
@@ -338,7 +332,13 @@ export const TemplateElegant: React.FC<TemplateProps> = ({ invoice, logo, finalT
                <tr>
                  <td colSpan={2} className="py-8">
                     {invoice.notes && (
-                      <p className="font-serif italic text-sm opacity-60 text-center max-w-sm">"{invoice.notes}"</p>
+                      <p className="font-serif italic text-sm opacity-60 text-left mb-4">"{invoice.notes}"</p>
+                    )}
+                    {invoice.bankDetails && (
+                      <div className="text-left mt-4 opacity-80">
+                        <p className="font-sans text-[9px] uppercase tracking-[0.2em] font-bold mb-1">Payment Information</p>
+                        <p className="font-serif text-xs whitespace-pre-wrap">{invoice.bankDetails}</p>
+                      </div>
                     )}
                  </td>
                  <td className="py-8 text-right font-sans text-[9px] uppercase tracking-[0.3em] font-bold">Subtotal</td>
@@ -352,14 +352,6 @@ export const TemplateElegant: React.FC<TemplateProps> = ({ invoice, logo, finalT
              </tbody>
            </table>
         </div>
-
-        {/* BANK INFORMATION */}
-        {invoice.bankInfo && (
-          <div className="w-full mt-12 pt-8 border-t border-[var(--tx-primary)]/20">
-            <p className="font-sans text-[9px] uppercase tracking-[0.3em] opacity-60 mb-3 font-bold">Bank Information</p>
-            <p className="font-sans text-sm whitespace-pre-wrap opacity-80">{invoice.bankInfo}</p>
-          </div>
-        )}
 
       </div>
     </>
@@ -437,19 +429,21 @@ export const TemplateJapandi: React.FC<TemplateProps> = ({ invoice, logo, finalT
           </table>
         </div>
 
-        {/* BANK INFORMATION */}
-        {invoice.bankInfo && (
-          <div className="pt-12 mt-12 border-t border-[var(--tx-primary)]/10">
-            <p className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-normal mb-3">Bank Information</p>
-            <p className="text-xs whitespace-pre-wrap opacity-60 font-light">{invoice.bankInfo}</p>
+        <div className="pt-12 mt-12 grid grid-cols-2 gap-8 text-sm opacity-60">
+          <div>
+            {invoice.bankDetails && (
+              <>
+                <p className="text-[10px] uppercase tracking-[0.2em] mb-2 font-bold">Transfer To</p>
+                <p className="whitespace-pre-wrap inline-block leading-relaxed">{invoice.bankDetails}</p>
+              </>
+            )}
           </div>
-        )}
-
-        {invoice.notes && (
-          <div className="pt-12 mt-4 text-center opacity-50">
-            <p className="text-xs max-w-md mx-auto whitespace-pre-wrap leading-relaxed italic">{invoice.notes}</p>
+          <div className="text-right">
+             {invoice.notes && (
+               <p className="whitespace-pre-wrap leading-relaxed italic">{invoice.notes}</p>
+             )}
           </div>
-        )}
+        </div>
       </div>
     </>
   );
@@ -524,20 +518,20 @@ export const TemplateNeoclassical: React.FC<TemplateProps> = ({ invoice, logo, f
            </div>
         </div>
 
-        {/* BANK INFORMATION */}
-        {invoice.bankInfo && (
-          <div className="mt-8 pt-8 border-t border-[var(--tx-primary)]/20">
-            <p className="font-sans text-xs uppercase tracking-[0.3em] opacity-50 mb-2 font-bold">Bank Information</p>
-            <p className="text-sm whitespace-pre-wrap opacity-80">{invoice.bankInfo}</p>
-          </div>
-        )}
-
-        {invoice.notes && (
-          <div className="mt-4 pt-8 border-t border-[var(--tx-primary)]/20 text-center">
-            <p className="font-sans text-xs uppercase tracking-[0.3em] opacity-50 mb-2">Remarks</p>
-            <p className="italic opacity-80 text-sm max-w-lg mx-auto">{invoice.notes}</p>
-          </div>
-        )}
+        <div className="mt-8 pt-8 border-t border-[var(--tx-primary)]/20 grid grid-cols-2 gap-8">
+          {invoice.bankDetails && (
+            <div className="text-left">
+              <p className="font-sans text-[9px] uppercase tracking-[0.3em] opacity-50 mb-2">Bank Details</p>
+              <p className="opacity-80 text-sm whitespace-pre-wrap font-sans">{invoice.bankDetails}</p>
+            </div>
+          )}
+          {invoice.notes && (
+            <div className={invoice.bankDetails ? "text-right" : "text-center col-span-2"}>
+              <p className="font-sans text-[9px] uppercase tracking-[0.3em] opacity-50 mb-2">Remarks</p>
+              <p className="italic opacity-80 text-sm">{invoice.notes}</p>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );
@@ -557,14 +551,14 @@ export const TemplateBrutalism: React.FC<TemplateProps> = ({ invoice, logo, fina
               {logo ? <img src={logo} alt="Logo" className="h-12 w-auto object-contain" /> : <div className="text-4xl font-black uppercase tracking-tighter">INVOX</div>}
             </div>
             <div className="text-right flex flex-col items-end">
-              <h2 className="text-8xl font-black uppercase tracking-tighter leading-none block border-4 border-black dark:border-white bg-[var(--tx-primary)] text-[var(--bg-primary)] px-4 py-2 transform -rotate-3">INVOICE</h2>
+              <h2 className="text-8xl font-black uppercase tracking-tighter leading-none block border-4 border-black dark:border-white bg-[var(--tx-primary)] text-[var(--bg-primary)] px-4 py-2 transform rotate-2">INVOICE</h2>
               <div className="mt-4 font-mono text-xl border-2 border-black dark:border-white p-2 bg-pink-200 dark:bg-pink-800 text-black dark:text-white transform -rotate-1">#{invoice.id}</div>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-8 mb-8">
              <div className="col-span-2 border-4 border-black dark:border-white p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] bg-white dark:bg-black relative">
-               <div className="absolute -top-4 -left-4 bg-pink-300 dark:bg-pink-700 text-black dark:text-white border-2 border-black dark:border-white px-3 py-1 font-bold italic transform -rotate-2">BILL TO</div>
+               <div className="absolute -top-4 -left-4 bg-pink-300 dark:bg-pink-700 text-black dark:text-white border-2 border-black dark:border-white px-3 py-1 font-bold italic transform -rotate-3 text-sm">For your attention</div>
                <p className="font-black text-2xl uppercase mb-2 mt-2">{invoice.clientName || '——'}</p>
                <p className="font-mono text-sm whitespace-pre-wrap font-bold">{invoice.clientAddress || '——'}</p>
                <p className="font-mono text-xs mt-4 bg-yellow-200 dark:bg-yellow-900 inline-block px-2 text-black dark:text-white border border-black dark:border-white">{invoice.clientEmail}</p>
@@ -620,18 +614,16 @@ export const TemplateBrutalism: React.FC<TemplateProps> = ({ invoice, logo, fina
             </table>
           </div>
 
-          {/* BANK INFORMATION */}
-          {invoice.bankInfo && (
-            <div className="border-4 border-black dark:border-white p-4 font-mono font-bold uppercase bg-white dark:bg-black mb-8 relative">
-              <div className="absolute -top-4 left-4 bg-pink-300 dark:bg-pink-700 text-black dark:text-white border-2 border-black dark:border-white px-3 py-1 font-bold italic transform -rotate-1">BANK INFO</div>
-              <div className="text-xs whitespace-pre-wrap mt-2">{invoice.bankInfo}</div>
-            </div>
-          )}
-
           {invoice.notes && (
-            <div className="border-4 border-black dark:border-white p-4 font-mono font-bold uppercase relative bg-white dark:bg-black">
+            <div className="border-4 border-black dark:border-white p-4 font-mono font-bold uppercase relative bg-white dark:bg-black mb-4">
               <div className="absolute -top-3 left-4 bg-[var(--bg-primary)] px-2 font-bold text-[10px] tracking-widest uppercase">Remarks</div>
               {invoice.notes}
+            </div>
+          )}
+          {invoice.bankDetails && (
+            <div className="border-4 border-black dark:border-white p-4 font-mono font-bold uppercase relative bg-[var(--accent)] text-white">
+              <div className="absolute -top-3 left-4 bg-black dark:bg-white text-white dark:text-black px-2 font-bold text-[10px] tracking-widest uppercase">Bank Details</div>
+              <div className="whitespace-pre-wrap">{invoice.bankDetails}</div>
             </div>
           )}
         </div>

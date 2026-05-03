@@ -37,7 +37,7 @@ export default function InvoiceApp() {
     clientEmail: 'billing@gatsby.enterprises',
     currency: 'NGN',
     notes: 'PAYMENT DUE WITHIN 14 DAYS. THANK YOU FOR YOUR BUSINESS.',
-    bankInfo: '',
+    bankDetails: '',
     items: [{ id: Math.random().toString(36).substring(2, 8).toUpperCase(), desc: 'Architectural Consultation', qty: 1, price: 5000 }] as InvoiceItem[],
   });
 
@@ -148,7 +148,6 @@ export default function InvoiceApp() {
       clientName: '',
       clientAddress: '',
       clientEmail: '',
-      bankInfo: '',
       items: [{ id: Math.random().toString(36).substring(2, 8).toUpperCase(), desc: 'New Item', qty: 1, price: 0 }]
     });
   };
@@ -191,21 +190,28 @@ export default function InvoiceApp() {
       return;
     }
     
-    // Create cloned element for PDF generation to avoid messing up the UI
-    const clone = element.cloneNode(true) as HTMLElement;
-    // Add print specific classes or modify styles if necessary on clone
-    
-    const opt = {
-      margin:       10,
-      filename:     `Invoice-${invoice.id}.pdf`,
-      image:        { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
-      jsPDF:        { unit: 'mm' as const, format: 'a4', orientation: 'portrait' as const }
-    };
-
     try {
-      const html2pdf = (await import('html2pdf.js')).default;
-      await html2pdf().set(opt).from(element).save();
+      const htmlToImage = await import('html-to-image');
+      const { jsPDF } = await import('jspdf');
+      
+      const dataUrl = await htmlToImage.toJpeg(element, { quality: 0.98, pixelRatio: 2 });
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const margin = 10;
+      const printWidth = pdfWidth - (margin * 2);
+      
+      const imgProps = pdf.getImageProperties(dataUrl);
+      const printHeight = (imgProps.height * printWidth) / imgProps.width;
+      
+      pdf.addImage(dataUrl, 'JPEG', margin, margin, printWidth, printHeight);
+      pdf.save(`Invoice-${invoice.id}.pdf`);
+      
     } catch (error: any) {
       console.error("PDF generation failed", error);
       if (error?.name === 'ChunkLoadError') {
@@ -224,7 +230,7 @@ export default function InvoiceApp() {
     setTimeout(() => {
       setTransmitting(false);
       const subject = encodeURIComponent(`Invoice ${invoice.id}`);
-      const body = encodeURIComponent(`Please find the details for Invoice ${invoice.id} below.\n\nTotal Due: ${invoice.currency} ${finalTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+      const body = encodeURIComponent(`Please find the details for Invoice ${invoice.id} below.\n\nTotal Due: ${invoice.currency} ${finalTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\nDue Date: ${invoice.dueDate}\n\nThank you.`);
       window.location.href = `mailto:${invoice.clientEmail}?subject=${subject}&body=${body}`;
     }, 2500);
   };
@@ -338,7 +344,7 @@ export default function InvoiceApp() {
                         type="file" 
                         accept="image/*"
                         onChange={handleLogoUpload}
-                        className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:border file:border-[var(--border)] file:bg-transparent file:text-[var(--tx-primary)] file:uppercase file:tracking-widest file:font-bold file:cursor-pointer hover:file:bg-[var(--tx-primary)] hover:file:text-[var(--bg-primary)] transition-colors"
+                        className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:border file:border-[var(--border)] file:bg-transparent file:text-[var(--tx-primary)] file:uppercase file:tracking-widest file:font-bold hover:file:bg-[var(--tx-primary)] hover:file:text-[var(--bg-primary)] cursor-pointer transition-colors"
                       />
                     )}
                   </div>
@@ -449,24 +455,6 @@ export default function InvoiceApp() {
                 </div>
               </fieldset>
 
-              {/* BANK INFORMATION */}
-              <fieldset className="p-5 bg-[var(--bg-primary)]">
-                <legend className="text-xs uppercase font-bold tracking-widest text-[var(--accent)] mb-4">
-                  Bank Information
-                </legend>
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-widest mb-1 font-bold">Bank Details</label>
-                    <textarea 
-                      className="w-full bg-transparent border border-[var(--border)] p-2 text-sm min-h-[80px] focus:outline-none focus:border-[var(--accent)] transition-colors"
-                      value={invoice.bankInfo || ''}
-                      onChange={e => handleUpdate('bankInfo', e.target.value)}
-                      placeholder="E.g., Bank Name: ABC Bank&#10;Account Holder: Your Name&#10;Account Number: 1234567890&#10;SWIFT Code: ABCD1234"
-                    />
-                  </div>
-                </div>
-              </fieldset>
-
               {/* LINE ITEMS */}
               <fieldset className="p-0 bg-[var(--bg-primary)]">
                 <div className="p-5 flex items-center justify-between border-b border-[var(--border)]">
@@ -539,14 +527,24 @@ export default function InvoiceApp() {
                 </div>
               </fieldset>
 
-              <fieldset className="p-5">
+              <fieldset className="p-5 border-b border-[var(--border)]">
                 <legend className="text-xs uppercase font-bold tracking-widest text-[var(--accent)] mb-4">
                   Remarks / Memos
                 </legend>
                 <textarea 
-                  className="w-full bg-transparent border border-[var(--border)] p-3 text-sm min-h-[100px] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                  className="w-full bg-transparent border border-[var(--border)] p-3 text-sm min-h-[100px] focus:outline-none focus:border-[var(--accent)] transition-colors mb-6"
                   value={invoice.notes || ''}
                   onChange={e => handleUpdate('notes', e.target.value)}
+                />
+
+                <legend className="text-xs uppercase font-bold tracking-widest text-[var(--accent)] mb-4">
+                  Bank Details
+                </legend>
+                <textarea 
+                  className="w-full bg-transparent border border-[var(--border)] p-3 text-sm min-h-[100px] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                  placeholder="Bank Name&#10;Account Name&#10;Account Number"
+                  value={invoice.bankDetails || ''}
+                  onChange={e => handleUpdate('bankDetails', e.target.value)}
                 />
               </fieldset>
 
@@ -558,9 +556,9 @@ export default function InvoiceApp() {
              <button 
                onClick={handlePrint}
                disabled={isGeneratingPdf}
-               className={`flex items-center justify-center p-5 gap-3 font-bold uppercase tracking-widest hover:bg-[var(--tx-primary)] hover:text-[var(--bg-primary)] transition-colors group text-sm`}
+               className={`flex items-center justify-center p-5 gap-3 font-bold uppercase tracking-widest hover:bg-[var(--tx-primary)] hover:text-[var(--bg-primary)] transition-colors group text-sm ${isGeneratingPdf ? 'opacity-50 cursor-not-allowed' : ''}`}
              >
-               <Printer size={16} className={isGeneratingPdf ? 'animate-pulse' : ''} /> {isGeneratingPdf ? 'Generating PDF...' : 'Download PDF'}
+               <Printer size={16} className={isGeneratingPdf ? "animate-pulse" : ""} /> {isGeneratingPdf ? 'Generating...' : 'Print / Save PDF'}
              </button>
              <button 
                onClick={handleTransmit}
@@ -574,11 +572,11 @@ export default function InvoiceApp() {
 
         {/* RIGHT COMPARTMENT - THE INVOICE PREVIEW */}
         {/* HYBRID: Bauhaus rigid structure containing Art Deco opulent typography/accents */}
-        <section className="flex-1 bg-[#8c8c88] dark:bg-[#0a0a0a] p-4 md:p-12 lg:p-16 overflow-y-auto flex justify-center items-start print:p-0 print:bg-[white] no-print-scrollbar">
+        <section className="flex-1 bg-[#8c8c88] dark:bg-[#0a0a0a] p-4 md:p-12 lg:p-16 overflow-auto flex justify-start lg:justify-center items-start print:p-0 print:bg-[white] no-print-scrollbar">
           
           <div 
             id="invoice-preview" 
-            className="print-container bg-[var(--bg-primary)] text-[var(--tx-primary)] w-full max-w-[800px] p-10 md:p-14 relative transition-colors"
+            className="print-container bg-[var(--bg-primary)] text-[var(--tx-primary)] w-[800px] min-w-[800px] shrink-0 p-14 relative transition-colors"
             style={{ 
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
               border: '1px solid rgba(0, 0, 0, 0.1)'
