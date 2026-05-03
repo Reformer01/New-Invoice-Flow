@@ -37,6 +37,7 @@ export default function InvoiceApp() {
     clientEmail: 'billing@gatsby.enterprises',
     currency: 'NGN',
     notes: 'PAYMENT DUE WITHIN 14 DAYS. THANK YOU FOR YOUR BUSINESS.',
+    bankInfo: '',
     items: [{ id: Math.random().toString(36).substring(2, 8).toUpperCase(), desc: 'Architectural Consultation', qty: 1, price: 5000 }] as InvoiceItem[],
   });
 
@@ -147,6 +148,7 @@ export default function InvoiceApp() {
       clientName: '',
       clientAddress: '',
       clientEmail: '',
+      bankInfo: '',
       items: [{ id: Math.random().toString(36).substring(2, 8).toUpperCase(), desc: 'New Item', qty: 1, price: 0 }]
     });
   };
@@ -222,7 +224,7 @@ export default function InvoiceApp() {
     setTimeout(() => {
       setTransmitting(false);
       const subject = encodeURIComponent(`Invoice ${invoice.id}`);
-      const body = encodeURIComponent(`Please find the details for Invoice ${invoice.id} below.\n\nTotal Due: ${invoice.currency} ${finalTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\nDue Date: ${invoice.dueDate}\n\nThank you.`);
+      const body = encodeURIComponent(`Please find the details for Invoice ${invoice.id} below.\n\nTotal Due: ${invoice.currency} ${finalTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
       window.location.href = `mailto:${invoice.clientEmail}?subject=${subject}&body=${body}`;
     }, 2500);
   };
@@ -336,7 +338,7 @@ export default function InvoiceApp() {
                         type="file" 
                         accept="image/*"
                         onChange={handleLogoUpload}
-                        className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:border file:border-[var(--border)] file:bg-transparent file:text-[var(--tx-primary)] file:uppercase file:tracking-widest file:font-bold hover:file:bg-[var(--tx-primary)] hover:file:text-[var(--bg-primary)] cursor-pointer transition-colors"
+                        className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:border file:border-[var(--border)] file:bg-transparent file:text-[var(--tx-primary)] file:uppercase file:tracking-widest file:font-bold file:cursor-pointer hover:file:bg-[var(--tx-primary)] hover:file:text-[var(--bg-primary)] transition-colors"
                       />
                     )}
                   </div>
@@ -447,6 +449,24 @@ export default function InvoiceApp() {
                 </div>
               </fieldset>
 
+              {/* BANK INFORMATION */}
+              <fieldset className="p-5 bg-[var(--bg-primary)]">
+                <legend className="text-xs uppercase font-bold tracking-widest text-[var(--accent)] mb-4">
+                  Bank Information
+                </legend>
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-widest mb-1 font-bold">Bank Details</label>
+                    <textarea 
+                      className="w-full bg-transparent border border-[var(--border)] p-2 text-sm min-h-[80px] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                      value={invoice.bankInfo || ''}
+                      onChange={e => handleUpdate('bankInfo', e.target.value)}
+                      placeholder="E.g., Bank Name: ABC Bank&#10;Account Holder: Your Name&#10;Account Number: 1234567890&#10;SWIFT Code: ABCD1234"
+                    />
+                  </div>
+                </div>
+              </fieldset>
+
               {/* LINE ITEMS */}
               <fieldset className="p-0 bg-[var(--bg-primary)]">
                 <div className="p-5 flex items-center justify-between border-b border-[var(--border)]">
@@ -538,7 +558,7 @@ export default function InvoiceApp() {
              <button 
                onClick={handlePrint}
                disabled={isGeneratingPdf}
-               className={`flex items-center justify-center p-5 gap-3 font-bold uppercase tracking-widest hover:bg-[var(--tx-primary)] hover:text-[var(--bg-primary)] transition-colors group text-sm ${isGeneratingPdf ? 'opacity-50 cursor-not-allowed' : ''}`}
+               className={`flex items-center justify-center p-5 gap-3 font-bold uppercase tracking-widest hover:bg-[var(--tx-primary)] hover:text-[var(--bg-primary)] transition-colors group text-sm`}
              >
                <Printer size={16} className={isGeneratingPdf ? 'animate-pulse' : ''} /> {isGeneratingPdf ? 'Generating PDF...' : 'Download PDF'}
              </button>
