@@ -1,0 +1,64 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+}
+
+@layer base {
+  :root {
+    --bg-primary: #FAF9F6;
+    --bg-secondary: #EBEAE2;
+    --tx-primary: #1A1A1A;
+    --tx-inverse: #FAF9F6;
+    --accent: #C5A059;
+    --border: #1A1A1A;
+  }
+  
+  .dark {
+    --bg-primary: #141414;
+    --bg-secondary: #1F1F1F;
+    --tx-primary: #F2EFE9;
+    --tx-inverse: #141414;
+    --accent: #D4AF37;
+    --border: #D4AF37;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--tx-primary);
+  }
+
+  /* 
+   * CRITICAL OVERRIDE for html2pdf.js (html2canvas) 
+   * Tailwind V4 sets --default-border-color with color-mix and oklch/oklab. 
+   * html2canvas throws an error when trying to parse those new CSS functions.
+   * By forcefully resetting them to hex/transparent, html2canvas renders correctly.
+   */
+  *, ::before, ::after {
+    border-color: var(--border, transparent);
+    outline-color: transparent;
+    text-decoration-color: transparent;
+  }
+}
+
+::selection {
+  background-color: var(--accent);
+  color: var(--tx-inverse);
+}
+
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  body, html {
+    background-color: var(--bg-primary) !important;
+    color: var(--tx-primary) !important;
+    height: auto !important;
+  }
+  .print-container {
+    width: 100% !important; margin: 0 !important; padding: 0 !important;
+    border: none !important; box-shadow: none !important; outline: none !important; background: transparent !important;
+  }
+  @page { margin: 1cm; size: auto; }
+}
