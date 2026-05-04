@@ -49,6 +49,14 @@
 
 }
 
+@layer utilities {
+  @keyframes fadeOut {
+    0% { opacity: 1; }
+    70% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+}
+
 ::selection {
   background-color: var(--accent);
   color: var(--tx-inverse);

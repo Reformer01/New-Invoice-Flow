@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Printer, Mail, Plus, Trash2, Moon, Sun, Save, Circle, Square } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Printer, Mail, Plus, Trash2, Moon, Sun, Save, Circle, Square, Repeat, Loader2, Check } from 'lucide-react';
 
 import { TemplateClassic, TemplateBold, TemplateElegant, TemplateJapandi, TemplateNeoclassical, TemplateBrutalism } from '../components/InvoiceTemplates';
 
@@ -9,6 +9,51 @@ const CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'NGN'];
 
 const TEMPLATES = ['hybrid-classic', 'hybrid-bold', 'hybrid-elegant', 'japandi-ethereal', 'neoclassical-liquid', 'brutalism-coquette'] as const;
 type TemplateType = typeof TEMPLATES[number];
+
+const TEMPLATE_PREVIEWS: { id: TemplateType; name: string; desc: string; preview: string; innerPreview: React.ReactNode }[] = [
+  { 
+    id: 'hybrid-classic', 
+    name: 'Hybrid Classic', 
+    desc: 'Bauhaus + Deco', 
+    preview: 'bg-white dark:bg-zinc-900 border-2 border-[var(--tx-primary)]',
+    innerPreview: <div className="flex flex-col h-full opacity-50 p-1"><div className="w-4 h-1 border-t border-l border-black dark:border-white mb-1"></div><div className="flex-1 border border-black/20 dark:border-white/20"></div></div>
+  },
+  { 
+    id: 'hybrid-bold', 
+    name: 'Hybrid Bold', 
+    desc: 'Structural', 
+    preview: 'bg-white dark:bg-black border-4 border-[var(--tx-primary)]',
+    innerPreview: <div className="flex flex-col h-full p-0.5"><div className="w-full h-1/3 bg-black dark:bg-white mb-0.5"></div><div className="w-full flex-1 border-t-2 border-black dark:border-white"></div></div>
+  },
+  { 
+    id: 'hybrid-elegant', 
+    name: 'Hybrid Elegant', 
+    desc: 'Opulent', 
+    preview: 'bg-[#faf9f6] dark:bg-[#111110] border-4 border-[var(--accent)] border-double',
+    innerPreview: <div className="flex flex-col h-full items-center p-1"><div className="w-full h-[1px] bg-[var(--accent)] mb-[1px]"></div><div className="w-full h-[1px] bg-[var(--accent)] mb-1"></div><div className="w-2 h-2 rounded-full border border-[var(--accent)]"></div></div>
+  },
+  { 
+    id: 'japandi-ethereal', 
+    name: 'Japandi', 
+    desc: 'Minimal + Glow', 
+    preview: 'bg-[#fcfbf9] dark:bg-[#1a1918] border border-[var(--accent)]/30',
+    innerPreview: <div className="flex flex-col h-full items-center justify-center relative overflow-hidden"><div className="absolute top-0 right-0 w-8 h-8 rounded-full bg-[var(--accent)]/20 blur-md"></div><div className="w-6 h-[1px] bg-[var(--tx-primary)]/40 mt-2"></div></div>
+  },
+  { 
+    id: 'neoclassical-liquid', 
+    name: 'Neoclassical', 
+    desc: 'Glass + Marble', 
+    preview: 'bg-gradient-to-br from-white/60 to-white/10 dark:from-white/10 dark:to-transparent border border-white/40 shadow-sm',
+    innerPreview: <div className="flex flex-col h-full rounded-md border border-[var(--tx-primary)]/20 m-1"></div>
+  },
+  { 
+    id: 'brutalism-coquette', 
+    name: 'Brutalism', 
+    desc: 'Raw + Soft', 
+    preview: 'bg-pink-100 dark:bg-pink-950 border-2 border-black dark:border-white shadow-[2px_2px_0_0_rgba(0,0,0,1)] dark:shadow-[2px_2px_0_0_rgba(255,255,255,1)]',
+    innerPreview: <div className="flex h-full p-1"><div className="bg-pink-300 dark:bg-pink-800 w-1/3 h-full border border-black dark:border-white"></div><div className="w-2/3 h-2 bg-[var(--bg-primary)] border border-black dark:border-white mt-1 ml-1 transform rotate-2"></div></div>
+  }
+];
 
 type InvoiceItem = {
   id: string;
@@ -24,22 +69,24 @@ type ClientType = {
   email: string;
 };
 
+const generateDefaultInvoice = () => ({
+  id: String(Math.random()).substring(2, 8).toUpperCase(),
+  date: new Date().toISOString().split('T')[0],
+  dueDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+  clientName: 'Gatsby Enterprises',
+  clientAddress: '1920 Deco Blvd, New York, NY',
+  clientEmail: 'billing@gatsby.enterprises',
+  currency: 'NGN',
+  notes: 'PAYMENT DUE WITHIN 14 DAYS. THANK YOU FOR YOUR BUSINESS.',
+  bankDetails: '',
+  items: [{ id: String(Math.random()).substring(2, 8).toUpperCase(), desc: 'Architectural Consultation', qty: 1, price: 5000 }] as InvoiceItem[],
+});
+
 export default function InvoiceApp() {
   const [transmitting, setTransmitting] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   
-  const [invoice, setInvoice] = useState({
-    id: Math.random().toString(36).substring(2, 8).toUpperCase(),
-    date: new Date().toISOString().split('T')[0],
-    dueDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
-    clientName: 'Gatsby Enterprises',
-    clientAddress: '1920 Deco Blvd, New York, NY',
-    clientEmail: 'billing@gatsby.enterprises',
-    currency: 'NGN',
-    notes: 'PAYMENT DUE WITHIN 14 DAYS. THANK YOU FOR YOUR BUSINESS.',
-    bankDetails: '',
-    items: [{ id: Math.random().toString(36).substring(2, 8).toUpperCase(), desc: 'Architectural Consultation', qty: 1, price: 5000 }] as InvoiceItem[],
-  });
+  const [invoice, setInvoice] = useState(generateDefaultInvoice);
 
   const [mounted, setMounted] = useState(false);
   const [theme, setTheme] = useState<'light'|'dark'>('light');
@@ -47,8 +94,53 @@ export default function InvoiceApp() {
   const [clients, setClients] = useState<ClientType[]>([]);
   const [logo, setLogo] = useState<string | null>(null);
   const [template, setTemplate] = useState<TemplateType>('hybrid-classic');
+  const [pdfOrientation, setPdfOrientation] = useState<'portrait' | 'landscape'>('portrait');
+  const [pdfQuality, setPdfQuality] = useState<'high' | 'medium' | 'low'>('medium');
+  const [footerText, setFooterText] = useState<string>('');
+  const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [showTemplateWarning, setShowTemplateWarning] = useState(false);
+  const [pendingTemplate, setPendingTemplate] = useState<TemplateType | null>(null);
+
+  const invoiceRef = useRef(invoice);
+  useEffect(() => {
+    invoiceRef.current = invoice;
+  }, [invoice]);
 
   useEffect(() => {
+    if (!mounted) return;
+    const interval = setInterval(() => {
+      setIsAutoSaving(true);
+      setShowSaveSuccess(false);
+      
+      setTimeout(() => {
+        const currentInvoice = invoiceRef.current;
+        const data = JSON.parse(localStorage.getItem('invoiceflow_data') || '{"invoices":[]}');
+        const existingIdx = (data.invoices || []).findIndex((i: any) => i.id === currentInvoice.id);
+        let newInvoices = data.invoices || [];
+        if (existingIdx !== undefined && existingIdx >= 0) {
+           newInvoices[existingIdx] = currentInvoice;
+        } else {
+           newInvoices.push(currentInvoice);
+        }
+        data.invoices = newInvoices;
+        localStorage.setItem('invoiceflow_data', JSON.stringify(data));
+        setInvoices(newInvoices);
+        
+        const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        setLastSaved(timeString);
+        setIsAutoSaving(false);
+        setShowSaveSuccess(true);
+        setTimeout(() => setShowSaveSuccess(false), 2000);
+      }, 800); // Add a small delay so the auto-save indicator is visible
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [mounted]);
+
+  useEffect(() => {
+    // eslint-disable-next-line
     setMounted(true);
 
     const saved = localStorage.getItem('invoiceflow_data');
@@ -117,6 +209,16 @@ export default function InvoiceApp() {
     localStorage.setItem('invoiceflow_data', JSON.stringify(data));
     setInvoices(newInvoices);
     alert(`[ SYSTEM ] DATA STORED IN LOCAL MEMORY.`);
+  };
+
+  const getClientSuggestions = (query: string) => {
+    if (!query) return [];
+    const lowerQuery = query.toLowerCase();
+    return clients.filter(c => 
+      c.name.toLowerCase().includes(lowerQuery) || 
+      c.address.toLowerCase().includes(lowerQuery) || 
+      c.email.toLowerCase().includes(lowerQuery)
+    );
   };
 
   const saveClient = () => {
@@ -194,10 +296,17 @@ export default function InvoiceApp() {
       const htmlToImage = await import('html-to-image');
       const { jsPDF } = await import('jspdf');
       
-      const dataUrl = await htmlToImage.toJpeg(element, { quality: 0.98, pixelRatio: 2 });
+      const qualityOptions = {
+        high: { quality: 1.0, pixelRatio: 3 },
+        medium: { quality: 0.98, pixelRatio: 2 },
+        low: { quality: 0.8, pixelRatio: 1 }
+      };
+      
+      const imgOptions = qualityOptions[pdfQuality] || qualityOptions.medium;
+      const dataUrl = await htmlToImage.toJpeg(element, imgOptions);
       
       const pdf = new jsPDF({
-        orientation: 'portrait',
+        orientation: pdfOrientation,
         unit: 'mm',
         format: 'a4'
       });
@@ -233,6 +342,22 @@ export default function InvoiceApp() {
       const body = encodeURIComponent(`Please find the details for Invoice ${invoice.id} below.\n\nTotal Due: ${invoice.currency} ${finalTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}\nDue Date: ${invoice.dueDate}\n\nThank you.`);
       window.location.href = `mailto:${invoice.clientEmail}?subject=${subject}&body=${body}`;
     }, 2500);
+  };
+
+  const confirmTemplateChange = () => {
+    if (pendingTemplate) {
+      setTemplate(pendingTemplate);
+      const data = JSON.parse(localStorage.getItem('invoiceflow_data') || '{"invoices":[]}');
+      data.template = pendingTemplate;
+      localStorage.setItem('invoiceflow_data', JSON.stringify(data));
+    }
+    setShowTemplateWarning(false);
+    setPendingTemplate(null);
+  };
+
+  const cancelTemplateChange = () => {
+    setShowTemplateWarning(false);
+    setPendingTemplate(null);
   };
 
   const finalTotal = invoice.items.reduce((acc, it) => acc + (it.qty * it.price), 0);
@@ -274,7 +399,27 @@ export default function InvoiceApp() {
           
           <div className="p-4 border-b border-[var(--border)] flex items-center justify-between text-[var(--tx-primary)]">
              <span className="font-sans text-xs tracking-widest font-bold uppercase">Control Deck</span>
-             <div className="flex gap-4">
+             <div className="flex gap-4 items-center">
+               {isAutoSaving ? (
+                 <span className="text-[10px] text-[var(--accent)] font-bold italic flex items-center gap-1.5">
+                   <span className="relative flex h-1.5 w-1.5">
+                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent)] opacity-75"></span>
+                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[var(--accent)]"></span>
+                   </span>
+                   Auto-saving...
+                 </span>
+               ) : showSaveSuccess ? (
+                 <span 
+                   className="text-[10px] text-green-600 dark:text-green-400 font-bold italic flex items-center gap-1"
+                   style={{ animation: 'fadeOut 2s ease-in-out forwards' }}
+                 >
+                   ✅ Saved
+                 </span>
+               ) : lastSaved ? (
+                 <span className="text-[9px] opacity-60 italic mr-2 flex items-center gap-1">
+                   <Save size={10} /> Saved {lastSaved}
+                 </span>
+               ) : null}
                <button onClick={handleSave} className="flex gap-1 items-center hover:text-[var(--accent)] text-[10px] uppercase font-bold tracking-widest transition-colors"><Save size={14} /> Save</button>
                <button onClick={createNew} className="flex gap-1 items-center hover:text-[var(--accent)] text-[10px] uppercase font-bold tracking-widest transition-colors"><Plus size={14} /> New</button>
              </div>
@@ -301,28 +446,82 @@ export default function InvoiceApp() {
                 </div>
               )}
               
-              <div className="p-5 border-b border-[var(--border)] bg-[var(--bg-secondary)]">
+              <div className="p-5 border-b border-[var(--border)] bg-[var(--bg-secondary)] pb-6">
                 <legend className="text-xs uppercase font-bold tracking-widest text-[var(--accent)] mb-4">
                   Aesthetic Architecture
                 </legend>
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  {TEMPLATE_PREVIEWS.map((tp) => (
+                    <button
+                      key={tp.id}
+                      onClick={() => {
+                        if (template !== tp.id) {
+                          setPendingTemplate(tp.id);
+                          setShowTemplateWarning(true);
+                        }
+                      }}
+                      className={`flex flex-col items-start p-2 border transition-all text-left outline-none ${template === tp.id ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]' : 'border-[var(--border)] hover:border-[var(--tx-primary)]'}`}
+                    >
+                      <div className={`w-full h-16 mb-2 flex-shrink-0 relative overflow-hidden ${tp.preview}`}>
+                         {tp.innerPreview}
+                         {template === tp.id && <div className="absolute inset-0 bg-[var(--accent)]/10 pointer-events-none"></div>}
+                      </div>
+                      <div className="font-bold text-[9px] uppercase tracking-widest leading-tight">{tp.name}</div>
+                      <div className="text-[9px] opacity-70 italic truncate w-full">{tp.desc}</div>
+                    </button>
+                  ))}
+                </div>
+
+                <legend className="text-xs uppercase font-bold tracking-widest text-[var(--accent)] mb-4 mt-6">
+                  PDF Orientation
+                </legend>
+                <div className="flex gap-4 mb-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="pdfOrientation" 
+                      value="portrait" 
+                      checked={pdfOrientation === 'portrait'} 
+                      onChange={() => setPdfOrientation('portrait')}
+                      className="accent-[var(--tx-primary)]"
+                    />
+                    <span className="text-sm font-bold uppercase tracking-widest">Portrait</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="pdfOrientation" 
+                      value="landscape" 
+                      checked={pdfOrientation === 'landscape'} 
+                      onChange={() => setPdfOrientation('landscape')}
+                      className="accent-[var(--tx-primary)]"
+                    />
+                    <span className="text-sm font-bold uppercase tracking-widest">Landscape</span>
+                  </label>
+                </div>
+
+                <legend className="text-xs uppercase font-bold tracking-widest text-[var(--accent)] mb-4">
+                  Export Quality
+                </legend>
                 <select 
-                  className="w-full bg-transparent border border-[var(--border)] p-2 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors uppercase tracking-widest font-bold"
-                  value={template}
-                  onChange={e => {
-                    const val = e.target.value as TemplateType;
-                    setTemplate(val);
-                    const data = JSON.parse(localStorage.getItem('invoiceflow_data') || '{"invoices":[]}');
-                    data.template = val;
-                    localStorage.setItem('invoiceflow_data', JSON.stringify(data));
-                  }}
+                  className="w-full bg-transparent border border-[var(--border)] p-2 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors uppercase tracking-widest font-bold mb-6"
+                  value={pdfQuality}
+                  onChange={e => setPdfQuality(e.target.value as any)}
                 >
-                  <option value="hybrid-classic" className="bg-[var(--bg-primary)]">Hybrid Classic (Bauhaus + Deco)</option>
-                  <option value="hybrid-bold" className="bg-[var(--bg-primary)]">Hybrid Bold (Structural)</option>
-                  <option value="hybrid-elegant" className="bg-[var(--bg-primary)]">Hybrid Elegant (Opulent)</option>
-                  <option value="japandi-ethereal" className="bg-[var(--bg-primary)]">Japandi Ethereal (Minimal + Glow)</option>
-                  <option value="neoclassical-liquid" className="bg-[var(--bg-primary)]">Neoclassical Liquid Glass</option>
-                  <option value="brutalism-coquette" className="bg-[var(--bg-primary)]">Brutalism Coquette (Raw + Soft)</option>
+                  <option value="high" className="bg-[var(--bg-primary)]">High (Print Ready)</option>
+                  <option value="medium" className="bg-[var(--bg-primary)]">Medium (Standard)</option>
+                  <option value="low" className="bg-[var(--bg-primary)]">Low (Email/Draft)</option>
                 </select>
+
+                <legend className="text-xs uppercase font-bold tracking-widest text-[var(--accent)] mb-4">
+                  Document Footer Notice
+                </legend>
+                <textarea 
+                  className="w-full bg-transparent border border-[var(--border)] p-3 text-sm min-h-[60px] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                  placeholder="Legal notices, company info, or payment terms..."
+                  value={footerText}
+                  onChange={e => setFooterText(e.target.value)}
+                />
               </div>
               
               {/* SOURCE IDENTITY */}
@@ -386,32 +585,89 @@ export default function InvoiceApp() {
                 )}
                 
                 <div className="space-y-5">
-                  <div>
+                  <div className="relative">
                     <label className="block text-[10px] uppercase tracking-widest mb-1 font-bold">Client Name</label>
                     <input 
                       type="text" 
                       className="w-full bg-transparent border-b border-[var(--border)] py-1 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors"
                       value={invoice.clientName || ''}
                       onChange={e => handleUpdate('clientName', e.target.value)}
+                      onFocus={() => setFocusedField('clientName')}
+                      onBlur={() => setTimeout(() => setFocusedField(null), 200)}
                     />
+                    {focusedField === 'clientName' && getClientSuggestions(invoice.clientName || '').length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 border border-[var(--border)] shadow-lg max-h-60 overflow-y-auto bg-[var(--bg-secondary)] text-[var(--tx-primary)] flex flex-col">
+                        {getClientSuggestions(invoice.clientName || '').map(c => (
+                          <div 
+                            key={c.id} 
+                            className="p-3 text-sm cursor-pointer hover:bg-[var(--bg-primary)] border-b border-[var(--border)] last:border-b-0 flex flex-col gap-1"
+                            onMouseDown={(e) => { e.preventDefault(); setInvoice(prev => ({...prev, clientName: c.name, clientAddress: c.address, clientEmail: c.email})) }}
+                          >
+                            <div className="font-bold flex justify-between items-center">
+                              <span>{c.name}</span>
+                            </div>
+                            <div className="text-xs opacity-70 truncate">{c.address}</div>
+                            <div className="text-xs opacity-50 truncate">{c.email}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div>
+                  <div className="relative">
                     <label className="block text-[10px] uppercase tracking-widest mb-1 font-bold">Address</label>
                     <input 
                       type="text" 
                       className="w-full bg-transparent border-b border-[var(--border)] py-1 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors"
                       value={invoice.clientAddress || ''}
                       onChange={e => handleUpdate('clientAddress', e.target.value)}
+                      onFocus={() => setFocusedField('clientAddress')}
+                      onBlur={() => setTimeout(() => setFocusedField(null), 200)}
                     />
+                    {focusedField === 'clientAddress' && getClientSuggestions(invoice.clientAddress || '').length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 border border-[var(--border)] shadow-lg max-h-60 overflow-y-auto bg-[var(--bg-secondary)] text-[var(--tx-primary)] flex flex-col">
+                        {getClientSuggestions(invoice.clientAddress || '').map(c => (
+                          <div 
+                            key={c.id} 
+                            className="p-3 text-sm cursor-pointer hover:bg-[var(--bg-primary)] border-b border-[var(--border)] last:border-b-0 flex flex-col gap-1"
+                            onMouseDown={(e) => { e.preventDefault(); setInvoice(prev => ({...prev, clientName: c.name, clientAddress: c.address, clientEmail: c.email})) }}
+                          >
+                            <div className="font-bold flex justify-between items-center">
+                              <span>{c.name}</span>
+                            </div>
+                            <div className="text-xs opacity-70 truncate">{c.address}</div>
+                            <div className="text-xs opacity-50 truncate">{c.email}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div>
+                  <div className="relative">
                     <label className="block text-[10px] uppercase tracking-widest mb-1 font-bold">Email Address</label>
                     <input 
                       type="email" 
                       className="w-full bg-transparent border-b border-[var(--border)] py-1 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors"
                       value={invoice.clientEmail || ''}
                       onChange={e => handleUpdate('clientEmail', e.target.value)}
+                      onFocus={() => setFocusedField('clientEmail')}
+                      onBlur={() => setTimeout(() => setFocusedField(null), 200)}
                     />
+                    {focusedField === 'clientEmail' && getClientSuggestions(invoice.clientEmail || '').length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 border border-[var(--border)] shadow-lg max-h-60 overflow-y-auto bg-[var(--bg-secondary)] text-[var(--tx-primary)] flex flex-col">
+                        {getClientSuggestions(invoice.clientEmail || '').map(c => (
+                          <div 
+                            key={c.id} 
+                            className="p-3 text-sm cursor-pointer hover:bg-[var(--bg-primary)] border-b border-[var(--border)] last:border-b-0 flex flex-col gap-1"
+                            onMouseDown={(e) => { e.preventDefault(); setInvoice(prev => ({...prev, clientName: c.name, clientAddress: c.address, clientEmail: c.email})) }}
+                          >
+                            <div className="font-bold flex justify-between items-center">
+                              <span>{c.name}</span>
+                            </div>
+                            <div className="text-xs opacity-70 truncate">{c.address}</div>
+                            <div className="text-xs opacity-50 truncate">{c.email}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </fieldset>
@@ -576,7 +832,7 @@ export default function InvoiceApp() {
           
           <div 
             id="invoice-preview" 
-            className="print-container bg-[var(--bg-primary)] text-[var(--tx-primary)] w-[800px] min-w-[800px] shrink-0 p-14 relative transition-colors"
+            className={`print-container bg-[var(--bg-primary)] text-[var(--tx-primary)] ${pdfOrientation === 'landscape' ? 'w-[1131px] min-w-[1131px]' : 'w-[800px] min-w-[800px]'} shrink-0 p-14 relative transition-colors`}
             style={{ 
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
               border: '1px solid rgba(0, 0, 0, 0.1)'
@@ -584,12 +840,12 @@ export default function InvoiceApp() {
           >
              
              
-             {template === 'hybrid-classic' && <TemplateClassic invoice={invoice} logo={logo} finalTotal={finalTotal} />}
-             {template === 'hybrid-bold' && <TemplateBold invoice={invoice} logo={logo} finalTotal={finalTotal} />}
-             {template === 'hybrid-elegant' && <TemplateElegant invoice={invoice} logo={logo} finalTotal={finalTotal} />}
-             {template === 'japandi-ethereal' && <TemplateJapandi invoice={invoice} logo={logo} finalTotal={finalTotal} />}
-             {template === 'neoclassical-liquid' && <TemplateNeoclassical invoice={invoice} logo={logo} finalTotal={finalTotal} />}
-             {template === 'brutalism-coquette' && <TemplateBrutalism invoice={invoice} logo={logo} finalTotal={finalTotal} />}
+             {template === 'hybrid-classic' && <TemplateClassic invoice={invoice} logo={logo} finalTotal={finalTotal} footerText={footerText} />}
+             {template === 'hybrid-bold' && <TemplateBold invoice={invoice} logo={logo} finalTotal={finalTotal} footerText={footerText} />}
+             {template === 'hybrid-elegant' && <TemplateElegant invoice={invoice} logo={logo} finalTotal={finalTotal} footerText={footerText} />}
+             {template === 'japandi-ethereal' && <TemplateJapandi invoice={invoice} logo={logo} finalTotal={finalTotal} footerText={footerText} />}
+             {template === 'neoclassical-liquid' && <TemplateNeoclassical invoice={invoice} logo={logo} finalTotal={finalTotal} footerText={footerText} />}
+             {template === 'brutalism-coquette' && <TemplateBrutalism invoice={invoice} logo={logo} finalTotal={finalTotal} footerText={footerText} />}
 
           </div>
         </section>
@@ -607,6 +863,32 @@ export default function InvoiceApp() {
               <p className="font-sans text-xs uppercase tracking-widest opacity-70">
                 Transmitting Invoice NO. {invoice.id} to {invoice.clientEmail || 'Client'}
               </p>
+           </div>
+        </div>
+      )}
+
+      {/* TEMPLATE WARNING MODAL */}
+      {showTemplateWarning && (
+        <div className="fixed inset-0 z-50 bg-[var(--bg-primary)]/80 flex items-center justify-center p-4 backdrop-blur-md">
+           <div className="bg-[var(--bg-secondary)] border-2 border-[var(--accent)] p-8 max-w-md w-full shadow-[8px_8px_0_0_rgba(0,0,0,1)] dark:shadow-[8px_8px_0_0_rgba(255,255,255,1)]">
+              <h2 className="text-2xl font-serif font-black mb-4 uppercase tracking-tighter">Layout Warning</h2>
+              <p className="font-sans text-sm mb-8 opacity-80 leading-relaxed">
+                Changing the template architecture may alter the visual density and block arrangement of your current invoice data. Proceed with transformation?
+              </p>
+              <div className="flex gap-4">
+                <button 
+                  onClick={cancelTemplateChange}
+                  className="flex-1 p-3 font-bold uppercase tracking-widest text-xs border border-[var(--border)] hover:bg-[var(--bg-primary)] transition-colors"
+                >
+                  Terminate
+                </button>
+                <button 
+                  onClick={confirmTemplateChange}
+                  className="flex-1 p-3 font-bold uppercase tracking-widest text-xs bg-[var(--tx-primary)] text-[var(--bg-primary)] hover:opacity-90 transition-opacity"
+                >
+                  Proceed
+                </button>
+              </div>
            </div>
         </div>
       )}
