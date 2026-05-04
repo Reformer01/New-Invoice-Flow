@@ -103,6 +103,7 @@ export default function InvoiceApp() {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [showTemplateWarning, setShowTemplateWarning] = useState(false);
   const [pendingTemplate, setPendingTemplate] = useState<TemplateType | null>(null);
+  const [showManageContacts, setShowManageContacts] = useState(false);
 
   const invoiceRef = useRef(invoice);
   useEffect(() => {
@@ -241,6 +242,15 @@ export default function InvoiceApp() {
     localStorage.setItem('invoiceflow_data', JSON.stringify(data));
     setClients(newClients);
     alert(`[ SYSTEM ] CLIENT STORED IN LOCAL MEMORY.`);
+  };
+
+  const deleteClient = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const data = JSON.parse(localStorage.getItem('invoiceflow_data') || '{"invoices":[],"clients":[]}');
+    const newClients = (data.clients || []).filter((c: ClientType) => c.id !== id);
+    data.clients = newClients;
+    localStorage.setItem('invoiceflow_data', JSON.stringify(data));
+    setClients(newClients);
   };
 
   const createNew = () => {
@@ -563,7 +573,15 @@ export default function InvoiceApp() {
                 
                 {clients.length > 0 && (
                   <div className="mb-6">
-                    <label className="block text-xs uppercase tracking-widest mb-2 font-bold">Load Contact</label>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-xs uppercase tracking-widest font-bold">Load Contact</label>
+                      <button 
+                        onClick={() => setShowManageContacts(true)}
+                        className="text-[10px] uppercase font-bold tracking-widest text-[var(--accent)] hover:opacity-70 transition-opacity"
+                      >
+                        Manage Contacts
+                      </button>
+                    </div>
                     <select 
                       className="w-full bg-transparent border-b border-[var(--border)] p-1 text-sm focus:outline-none focus:border-[var(--accent)] transition-colors"
                       onChange={(e) => {
@@ -600,11 +618,18 @@ export default function InvoiceApp() {
                         {getClientSuggestions(invoice.clientName || '').map(c => (
                           <div 
                             key={c.id} 
-                            className="p-3 text-sm cursor-pointer hover:bg-[var(--bg-primary)] border-b border-[var(--border)] last:border-b-0 flex flex-col gap-1"
+                            className="p-3 text-sm cursor-pointer hover:bg-[var(--bg-primary)] border-b border-[var(--border)] last:border-b-0 flex flex-col gap-1 group"
                             onMouseDown={(e) => { e.preventDefault(); setInvoice(prev => ({...prev, clientName: c.name, clientAddress: c.address, clientEmail: c.email})) }}
                           >
                             <div className="font-bold flex justify-between items-center">
                               <span>{c.name}</span>
+                              <button 
+                                onMouseDown={(e) => deleteClient(e, c.id)}
+                                className="text-[var(--tx-primary)] opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity p-1"
+                                title="Delete Client"
+                              >
+                                <Trash2 size={14} />
+                              </button>
                             </div>
                             <div className="text-xs opacity-70 truncate">{c.address}</div>
                             <div className="text-xs opacity-50 truncate">{c.email}</div>
@@ -628,11 +653,18 @@ export default function InvoiceApp() {
                         {getClientSuggestions(invoice.clientAddress || '').map(c => (
                           <div 
                             key={c.id} 
-                            className="p-3 text-sm cursor-pointer hover:bg-[var(--bg-primary)] border-b border-[var(--border)] last:border-b-0 flex flex-col gap-1"
+                            className="p-3 text-sm cursor-pointer hover:bg-[var(--bg-primary)] border-b border-[var(--border)] last:border-b-0 flex flex-col gap-1 group"
                             onMouseDown={(e) => { e.preventDefault(); setInvoice(prev => ({...prev, clientName: c.name, clientAddress: c.address, clientEmail: c.email})) }}
                           >
                             <div className="font-bold flex justify-between items-center">
                               <span>{c.name}</span>
+                              <button 
+                                onMouseDown={(e) => deleteClient(e, c.id)}
+                                className="text-[var(--tx-primary)] opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity p-1"
+                                title="Delete Client"
+                              >
+                                <Trash2 size={14} />
+                              </button>
                             </div>
                             <div className="text-xs opacity-70 truncate">{c.address}</div>
                             <div className="text-xs opacity-50 truncate">{c.email}</div>
@@ -656,11 +688,18 @@ export default function InvoiceApp() {
                         {getClientSuggestions(invoice.clientEmail || '').map(c => (
                           <div 
                             key={c.id} 
-                            className="p-3 text-sm cursor-pointer hover:bg-[var(--bg-primary)] border-b border-[var(--border)] last:border-b-0 flex flex-col gap-1"
+                            className="p-3 text-sm cursor-pointer hover:bg-[var(--bg-primary)] border-b border-[var(--border)] last:border-b-0 flex flex-col gap-1 group"
                             onMouseDown={(e) => { e.preventDefault(); setInvoice(prev => ({...prev, clientName: c.name, clientAddress: c.address, clientEmail: c.email})) }}
                           >
                             <div className="font-bold flex justify-between items-center">
                               <span>{c.name}</span>
+                              <button 
+                                onMouseDown={(e) => deleteClient(e, c.id)}
+                                className="text-[var(--tx-primary)] opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity p-1"
+                                title="Delete Client"
+                              >
+                                <Trash2 size={14} />
+                              </button>
                             </div>
                             <div className="text-xs opacity-70 truncate">{c.address}</div>
                             <div className="text-xs opacity-50 truncate">{c.email}</div>
@@ -889,6 +928,48 @@ export default function InvoiceApp() {
                   Proceed
                 </button>
               </div>
+           </div>
+        </div>
+      )}
+
+      {/* MANAGE CONTACTS MODAL */}
+      {showManageContacts && (
+        <div className="fixed inset-0 z-50 bg-[var(--bg-primary)]/80 flex items-center justify-center p-4 backdrop-blur-md">
+           <div className="bg-[var(--bg-secondary)] border border-[var(--border)] p-8 max-w-md w-full max-h-[80vh] flex flex-col shadow-[8px_8px_0_0_rgba(0,0,0,1)] dark:shadow-[8px_8px_0_0_rgba(255,255,255,1)]">
+              <h2 className="text-2xl font-serif font-black mb-6 uppercase tracking-tighter shrink-0 flex justify-between items-center">
+                <span>Manage Contacts</span>
+                <button onClick={() => setShowManageContacts(false)} className="text-sm font-sans tracking-tight opacity-50 hover:opacity-100">✕</button>
+              </h2>
+              <div className="font-sans text-sm mb-6 flex-1 overflow-y-auto pr-2">
+                {clients.length === 0 ? (
+                  <p className="opacity-50 italic text-center py-4">No saved contacts found.</p>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {clients.map(c => (
+                      <div key={c.id} className="border border-[var(--border)] p-3 flex justify-between items-start gap-4 hover:border-[var(--accent)] transition-colors group bg-[var(--bg-primary)]">
+                        <div className="overflow-hidden">
+                          <div className="font-bold truncate">{c.name}</div>
+                          {c.address && <div className="text-xs opacity-70 truncate" title={c.address}>{c.address}</div>}
+                          {c.email && <div className="text-xs opacity-50 truncate">{c.email}</div>}
+                        </div>
+                        <button 
+                          onClick={(e) => deleteClient(e, c.id)}
+                          className="shrink-0 p-2 text-red-500 hover:bg-red-500/10 rounded transition-colors"
+                          title="Delete Contact"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button 
+                onClick={() => setShowManageContacts(false)}
+                className="w-full p-3 font-bold uppercase tracking-widest text-xs border border-[var(--border)] hover:bg-[var(--bg-primary)] transition-colors shrink-0"
+              >
+                Done
+              </button>
            </div>
         </div>
       )}

@@ -1,20 +1,50 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# InvoiceFlow
 
-# Run and deploy your AI Studio app
+InvoiceFlow is a web application for creating and managing professional invoices with customizable templates.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/01d011af-9c3c-49e6-b2e9-f9c42bc6e806
+- Invoice generation with multiple design templates
+- Customizable invoice data (client information, line items, notes, bank details)
+- Export to PDF with quality and orientation settings
+- Email invoice functionality 
+- Real-time preview and editing
+- Auto-saving functionality
 
-## Run Locally
+## Getting Started
 
-**Prerequisites:**  Node.js
+### Prerequisites
 
+- Node.js (version 20 or higher recommended)
+- npm
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Installation
+
+1. Install the dependencies:
+   ```sh
+   npm install
+   ```
+
+### Development
+
+Run the development server:
+
+```sh
+npm run dev
+```
+
+The application will be available at http://localhost:3000.
+
+### Build
+
+To create an optimized production build:
+
+```sh
+npm run build
+```
+
+To start the production server:
+
+```sh
+npm start
+```
